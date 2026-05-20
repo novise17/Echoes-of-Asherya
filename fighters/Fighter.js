@@ -1,7 +1,6 @@
 export class Fighter {
     constructor(name, x, color, controls) {
         this.name = name;
-
         this.x = x;
         this.y = 0;
 
@@ -9,10 +8,9 @@ export class Fighter {
         this.height = 120;
 
         this.velocityY = 0;
-        this.gravity = 0.7;
-
         this.speed = 6;
         this.jumpForce = -15;
+        this.gravity = 0.7;
 
         this.color = color;
 
@@ -24,11 +22,12 @@ export class Fighter {
         this.isGrounded = false;
         this.isAttacking = false;
 
+        this.controls = controls;
         this.facing = 1;
 
-        this.controls = controls;
-
         this.projectiles = [];
+
+        this.abilities = {};
     }
 
     move(keys, canvas) {
@@ -47,7 +46,6 @@ export class Fighter {
             this.isGrounded = false;
         }
 
-        // gravity
         this.y += this.velocityY;
         this.velocityY += this.gravity;
 
@@ -66,11 +64,7 @@ export class Fighter {
         }
     }
 
-    attack(opponent) {
-        if (this.isAttacking) return;
-
-        this.isAttacking = true;
-
+    attack(enemy) {
         const hitbox = {
             x: this.facing === 1 ? this.x + this.width : this.x - 40,
             y: this.y + 30,
@@ -79,17 +73,13 @@ export class Fighter {
         };
 
         if (
-            hitbox.x < opponent.x + opponent.width &&
-            hitbox.x + hitbox.width > opponent.x &&
-            hitbox.y < opponent.y + opponent.height &&
-            hitbox.y + hitbox.height > opponent.y
+            hitbox.x < enemy.x + enemy.width &&
+            hitbox.x + hitbox.width > enemy.x &&
+            hitbox.y < enemy.y + enemy.height &&
+            hitbox.y + hitbox.height > enemy.y
         ) {
-            opponent.health -= 10;
+            enemy.health -= 10;
         }
-
-        setTimeout(() => {
-            this.isAttacking = false;
-        }, 150);
     }
 
     updateProjectiles(ctx, enemy) {
@@ -118,19 +108,8 @@ export class Fighter {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        // energy bar (simple)
+        // energy bar
         ctx.fillStyle = "cyan";
         ctx.fillRect(this.x, this.y - 10, this.energy, 5);
-
-        // attack debug
-        if (this.isAttacking) {
-            ctx.fillStyle = "yellow";
-            ctx.fillRect(
-                this.facing === 1 ? this.x + this.width : this.x - 40,
-                this.y + 30,
-                40,
-                30
-            );
-        }
     }
 }
