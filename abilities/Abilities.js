@@ -3,7 +3,6 @@ export class Ability {
         this.name = name;
         this.cooldown = cooldown;
         this.energyCost = energyCost;
-
         this.lastUsed = 0;
     }
 
@@ -21,7 +20,6 @@ export class Ability {
         fighter.energy -= this.energyCost;
 
         this.activate(fighter, enemy);
-
         return true;
     }
 
