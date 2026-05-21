@@ -3,14 +3,11 @@
 // ============================================
 
 import { MatchManager } from "./engine/matchManager.js";
-
 import { CharacterSelect } from "./ui/characterSelect.js";
-
 import { IntroScreen } from "./ui/introScreen.js";
-
 import { HUD } from "./ui/hud.js";
 
-// Fighters
+// fighters
 import { Blaze } from "./fighters/Blaze.js";
 import { Volt } from "./fighters/Volt.js";
 import { Frost } from "./fighters/Frost.js";
@@ -18,7 +15,6 @@ import { Nova } from "./fighters/Nova.js";
 import { Shade } from "./fighters/Shade.js";
 import { Titano } from "./fighters/Titano.js";
 
-// VFX
 import { applyShake } from "./vfx/screenShake.js";
 import { updateParticles } from "./vfx/particleSystem.js";
 
@@ -27,32 +23,28 @@ import { updateParticles } from "./vfx/particleSystem.js";
 // ============================================
 
 const canvas = document.getElementById("gameCanvas");
-
 const ctx = canvas.getContext("2d");
 
 canvas.width = 1200;
-
 canvas.height = 600;
 
 // ============================================
-// GAME STATE
+// STATE
 // ============================================
 
-let state = "select"; 
-// select → intro → fight
+let state = "select";
 
 // ============================================
 // ROSTER
 // ============================================
 
 const roster = [
-
-    new Blaze(0, { left: "a", right: "d", jump: "w", attack: " " }),
-    new Volt(0, { left: "a", right: "d", jump: "w", attack: " " }),
-    new Frost(0, { left: "a", right: "d", jump: "w", attack: " " }),
-    new Nova(0, { left: "a", right: "d", jump: "w", attack: " " }),
-    new Shade(0, { left: "a", right: "d", jump: "w", attack: " " }),
-    new Titano(0, { left: "a", right: "d", jump: "w", attack: " " })
+    new Blaze(0, { left: "a", right: "d", up: "w" }),
+    new Volt(0, { left: "a", right: "d", up: "w" }),
+    new Frost(0, { left: "a", right: "d", up: "w" }),
+    new Nova(0, { left: "a", right: "d", up: "w" }),
+    new Shade(0, { left: "a", right: "d", up: "w" }),
+    new Titano(0, { left: "a", right: "d", up: "w" })
 ];
 
 // ============================================
@@ -60,22 +52,21 @@ const roster = [
 // ============================================
 
 const selectScreen = new CharacterSelect(roster);
-
 const introScreen = new IntroScreen();
 
-let match = null;
-
-let hud = null;
+let match;
+let hud;
 
 // ============================================
-// INPUT
+// INPUT STATE
 // ============================================
 
 const keys = {};
 
 window.addEventListener("keydown", (e) => {
 
-    // CHARACTER SELECT INPUT
+    keys[e.key] = true;
+
     if (state === "select") {
 
         selectScreen.handleInput(e.key);
@@ -89,11 +80,7 @@ window.addEventListener("keydown", (e) => {
                 fighters.p2
             );
 
-            hud = new HUD(
-                match.player1,
-                match.player2,
-                match
-            );
+            hud = new HUD(match.player1, match.player2, match);
 
             introScreen.start();
 
@@ -101,8 +88,29 @@ window.addEventListener("keydown", (e) => {
         }
     }
 
-    // FIGHT INPUT
-    keys[e.key] = true;
+    // ============================
+    // ABILITY INPUTS
+    // ============================
+
+    if (state === "fight") {
+
+        const p1 = match.player1;
+        const p2 = match.player2;
+
+        // 🧑 PLAYER 1 (Z X C V U)
+        if (e.key === "z") p1.useAbility(0, p2);
+        if (e.key === "x") p1.useAbility(1, p2);
+        if (e.key === "c") p1.useAbility(2, p2);
+        if (e.key === "v") p1.useAbility(3, p2);
+        if (e.key === "u") p1.useAbility(4, p2);
+
+        // 🧑 PLAYER 2 (1 2 3 4 5)
+        if (e.key === "1") p2.useAbility(0, p1);
+        if (e.key === "2") p2.useAbility(1, p1);
+        if (e.key === "3") p2.useAbility(2, p1);
+        if (e.key === "4") p2.useAbility(3, p1);
+        if (e.key === "5") p2.useAbility(4, p1);
+    }
 });
 
 window.addEventListener("keyup", (e) => {
@@ -120,10 +128,7 @@ function update() {
 
         introScreen.update();
 
-        if (introScreen.done) {
-
-            state = "fight";
-        }
+        if (introScreen.done) state = "fight";
 
         return;
     }
@@ -135,74 +140,12 @@ function update() {
         if (!match.roundOver && !match.matchOver) {
 
             match.player1.move(keys, canvas);
-
             match.player2.move(keys, canvas);
 
-            if (keys[match.player1.controls.attack]) {
-
-                match.player1.attack(match.player2);
-            }
-
-            if (keys[match.player2.controls.attack]) {
-
-                match.player2.attack(match.player1);
-            }
+            match.player1.updateAbilities();
+            match.player2.updateAbilities();
         }
     }
-}
-
-// ============================================
-// DRAW SELECT
-// ============================================
-
-function drawSelect() {
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "white";
-
-    ctx.font = "40px Arial";
-
-    ctx.textAlign = "center";
-
-    ctx.fillText("SELECT FIGHTERS", canvas.width / 2, 80);
-
-    roster.forEach((f, i) => {
-
-        const x = 150 + i * 160;
-
-        const y = 250;
-
-        ctx.fillStyle =
-            i === selectScreen.selectedIndex
-                ? "yellow"
-                : "gray";
-
-        ctx.fillRect(x, y, 80, 120);
-
-        ctx.fillStyle = "white";
-
-        ctx.fillText(
-            f.name,
-            x + 40,
-            y + 70
-        );
-    });
-
-    ctx.fillText(
-        `Phase: ${selectScreen.phase}`,
-        canvas.width / 2,
-        500
-    );
-}
-
-// ============================================
-// DRAW INTRO
-// ============================================
-
-function drawIntro() {
-
-    introScreen.draw(ctx);
 }
 
 // ============================================
@@ -217,23 +160,18 @@ function drawFight() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // FLOOR
     ctx.fillStyle = "#222";
 
     ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
 
-    // FIGHTERS
     match.player1.draw(ctx);
     match.player2.draw(ctx);
 
-    // PROJECTILES
     match.player1.updateProjectiles(ctx, match.player2);
     match.player2.updateProjectiles(ctx, match.player1);
 
-    // PARTICLES
     updateParticles(ctx);
 
-    // HUD (NEW)
     hud.draw(ctx, canvas);
 
     ctx.restore();
@@ -247,8 +185,8 @@ function loop() {
 
     update();
 
-    if (state === "select") drawSelect();
-    else if (state === "intro") drawIntro();
+    if (state === "select") selectScreen.draw?.(ctx, canvas);
+    else if (state === "intro") introScreen.draw(ctx);
     else drawFight();
 
     requestAnimationFrame(loop);
