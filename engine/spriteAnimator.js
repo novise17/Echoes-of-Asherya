@@ -26,7 +26,6 @@ export class SpriteAnimator {
         if (this.tick >= this.fps) {
 
             this.tick = 0;
-
             this.currentFrame++;
 
             if (this.currentFrame >= this.frameCount) {
