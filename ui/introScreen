@@ -1,0 +1,64 @@
+// ============================================
+// FILE: ui/introScreen.js
+// ============================================
+
+export class IntroScreen {
+
+    constructor() {
+
+        this.timer = 0;
+
+        this.phase = "round"; // round → fight
+
+        this.done = false;
+    }
+
+    start() {
+
+        this.timer = 0;
+
+        this.phase = "round";
+
+        this.done = false;
+    }
+
+    update() {
+
+        this.timer++;
+
+        if (this.phase === "round" && this.timer > 60) {
+
+            this.phase = "fight";
+        }
+
+        if (this.timer > 120) {
+
+            this.done = true;
+        }
+    }
+
+    draw(ctx) {
+
+        ctx.save();
+
+        ctx.fillStyle = "white";
+
+        ctx.font = "60px Arial";
+
+        ctx.textAlign = "center";
+
+        if (this.phase === "round") {
+
+            ctx.fillText("ROUND 1", 600, 200);
+        }
+
+        if (this.phase === "fight") {
+
+            ctx.fillStyle = "yellow";
+
+            ctx.fillText("FIGHT!", 600, 200);
+        }
+
+        ctx.restore();
+    }
+}
