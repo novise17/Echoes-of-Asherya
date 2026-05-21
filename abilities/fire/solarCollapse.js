@@ -1,25 +1,57 @@
+// ============================================
+// FILE:
+// abilities/fire/solarCollapse.js
+// ============================================
+
 import { Ability } from "../Ability.js";
 
+import {
+    spawnParticles
+} from "../../vfx/particleSystem.js";
+
+import {
+    triggerShake
+} from "../../vfx/screenShake.js";
+
 export class SolarCollapse extends Ability {
+
     constructor() {
+
         super({
+
             name: "Solar Collapse",
+
             cooldown: 8000,
+
             energyCost: 60
         });
     }
 
     activate(fighter, enemy) {
-        enemy.health -= 35;
 
-        // massive knockback
-        enemy.x += fighter.facing * 120;
+        // MASSIVE SCREEN SHAKE
+        triggerShake(25);
 
-        // temporary arena pressure effect
-        fighter.speed += 2;
+        // HUGE PARTICLE EXPLOSION
+        spawnParticles(
 
-        setTimeout(() => {
-            fighter.speed -= 2;
-        }, 3000);
+            enemy.x,
+
+            enemy.y,
+
+            "red",
+
+            50
+        );
+
+        // ULTIMATE DAMAGE
+        enemy.takeHit(
+
+            35,
+
+            120,
+
+            fighter.facing
+        );
     }
 }
