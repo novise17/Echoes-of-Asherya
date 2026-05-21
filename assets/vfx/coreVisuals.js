@@ -1,54 +1,44 @@
-// ============================================
-// FILE: vfx/coreVisuals.js
-// ============================================
-
 export const CoreVisuals = {
 
     fire: {
         aura: "orange",
-        glow: true,
-        trail: true,
+        speedBoost: 1.08,
         shakeIntensity: 0.6,
-        speedBoost: 1.08
+        trail: true
     },
 
     ice: {
         aura: "cyan",
-        glow: true,
-        trail: false,
+        speedBoost: 0.95,
         shakeIntensity: 0.25,
-        speedBoost: 0.95
+        trail: false
     },
 
     lightning: {
         aura: "yellow",
-        glow: true,
-        trail: true,
+        speedBoost: 1.15,
         shakeIntensity: 0.35,
-        speedBoost: 1.15
+        trail: true
     },
 
     earth: {
         aura: "#8B5A2B",
-        glow: false,
-        trail: false,
+        speedBoost: 0.85,
         shakeIntensity: 0.9,
-        speedBoost: 0.85
+        trail: false
     },
 
     cosmic: {
         aura: "purple",
-        glow: true,
-        trail: true,
+        speedBoost: 1.1,
         shakeIntensity: 0.7,
-        speedBoost: 1.1
+        trail: true
     },
 
     shadow: {
         aura: "black",
-        glow: true,
-        trail: true,
+        speedBoost: 1.2,
         shakeIntensity: 0.5,
-        speedBoost: 1.2
+        trail: true
     }
 };
