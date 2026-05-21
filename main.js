@@ -6,6 +6,8 @@ import { MatchManager } from "./engine/matchManager.js";
 
 import { CharacterSelect } from "./ui/characterSelect.js";
 
+import { IntroScreen } from "./ui/introScreen.js";
+
 import { Blaze } from "./fighters/Blaze.js";
 import { Volt } from "./fighters/Volt.js";
 import { Frost } from "./fighters/Frost.js";
@@ -37,42 +39,38 @@ canvas.height = 600;
 // GAME STATE
 // ============================================
 
-let state = "select"; // select | fight
+let state = "select"; 
+// select → intro → fight
 
 // ============================================
-// ROSTER (REAL FIGHTERS)
+// ROSTER
 // ============================================
 
 const roster = [
 
     new Blaze(0, { left: "a", right: "d", jump: "w", attack: " " }),
-
     new Volt(0, { left: "a", right: "d", jump: "w", attack: " " }),
-
     new Frost(0, { left: "a", right: "d", jump: "w", attack: " " }),
-
     new Nova(0, { left: "a", right: "d", jump: "w", attack: " " }),
-
     new Shade(0, { left: "a", right: "d", jump: "w", attack: " " }),
-
     new Titano(0, { left: "a", right: "d", jump: "w", attack: " " })
 ];
 
 // ============================================
-// CHARACTER SELECT
+// SYSTEMS
 // ============================================
 
 const selectScreen = new CharacterSelect(roster);
 
-// ============================================
-// MATCH
-// ============================================
+const introScreen = new IntroScreen();
 
 let match = null;
 
 // ============================================
 // INPUT
 // ============================================
+
+const keys = {};
 
 window.addEventListener("keydown", (e) => {
 
@@ -89,25 +87,23 @@ window.addEventListener("keydown", (e) => {
                 fighters.p2
             );
 
-            state = "fight";
+            introScreen.start();
+
+            state = "intro";
         }
-    }
-
-    if (state === "fight") {
-
-        // attacks handled in update loop (cleaner)
     }
 });
 
-// ============================================
-// UPDATE KEYS
-// ============================================
+// gameplay input
+window.addEventListener("keydown", (e) => {
 
-const keys = {};
+    keys[e.key] = true;
+});
 
-window.addEventListener("keydown", (e) => keys[e.key] = true);
+window.addEventListener("keyup", (e) => {
 
-window.addEventListener("keyup", (e) => keys[e.key] = false);
+    keys[e.key] = false;
+});
 
 // ============================================
 // UPDATE
@@ -115,24 +111,37 @@ window.addEventListener("keyup", (e) => keys[e.key] = false);
 
 function update() {
 
-    if (state !== "fight") return;
+    if (state === "intro") {
 
-    match.update();
+        introScreen.update();
 
-    if (!match.roundOver && !match.matchOver) {
+        if (introScreen.done) {
 
-        match.player1.move(keys, canvas);
-
-        match.player2.move(keys, canvas);
-
-        if (keys[match.player1.controls.attack]) {
-
-            match.player1.attack(match.player2);
+            state = "fight";
         }
 
-        if (keys[match.player2.controls.attack]) {
+        return;
+    }
 
-            match.player2.attack(match.player1);
+    if (state === "fight") {
+
+        match.update();
+
+        if (!match.roundOver && !match.matchOver) {
+
+            match.player1.move(keys, canvas);
+
+            match.player2.move(keys, canvas);
+
+            if (keys[match.player1.controls.attack]) {
+
+                match.player1.attack(match.player2);
+            }
+
+            if (keys[match.player2.controls.attack]) {
+
+                match.player2.attack(match.player1);
+            }
         }
     }
 }
@@ -146,6 +155,8 @@ function drawSelect() {
     ctx.fillStyle = "white";
 
     ctx.font = "40px Arial";
+
+    ctx.textAlign = "left";
 
     ctx.fillText("SELECT FIGHTERS", 420, 80);
 
@@ -164,7 +175,7 @@ function drawSelect() {
 
         ctx.fillStyle = "white";
 
-        ctx.fillText(f.name || "F", x + 10, y + 70);
+        ctx.fillText(f.name, x + 10, y + 70);
     });
 
     ctx.fillText(
@@ -206,6 +217,21 @@ function drawFight() {
 }
 
 // ============================================
+// DRAW INTRO
+// ============================================
+
+function drawIntro() {
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#000";
+
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    introScreen.draw(ctx);
+}
+
+// ============================================
 // UI
 // ============================================
 
@@ -238,8 +264,10 @@ function drawUI() {
 
 function loop() {
 
-    if (state === "select") drawSelect();
+    update();
 
+    if (state === "select") drawSelect();
+    else if (state === "intro") drawIntro();
     else drawFight();
 
     requestAnimationFrame(loop);
