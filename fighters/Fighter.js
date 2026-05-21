@@ -1,7 +1,3 @@
-// ============================================
-// FILE: fighters/Fighter.js
-// ============================================
-
 import { triggerShake } from "../vfx/screenShake.js";
 import { spawnParticles } from "../vfx/particleSystem.js";
 import { AbilityRegistry } from "../abilities/abilityRegistry.js";
@@ -11,80 +7,60 @@ import { SpriteAnimator } from "../engine/SpriteAnimator.js";
 
 export class Fighter {
 
-    constructor(name, x, color, controls, core = null) {
+    constructor(name, x, color, controls, core) {
 
-        // IDENTITY
         this.name = name;
         this.core = core;
 
-        // VISUAL CORE DATA
-        this.visual = CoreVisuals[this.core] || CoreVisuals.fire;
+        this.visual = CoreVisuals[this.core];
 
-        // POSITION
         this.x = x;
         this.y = 0;
 
-        // SIZE
         this.width = 60;
         this.height = 120;
 
-        // MOVEMENT
-        this.velocityY = 0;
         this.speed = 6;
         this.jumpForce = -15;
         this.gravity = 0.7;
+
+        this.velocityY = 0;
         this.isGrounded = false;
 
-        // STATS
         this.health = 100;
-        this.maxHealth = 100;
-
         this.energy = 100;
-        this.maxEnergy = 100;
 
-        // STATE
         this.hitstun = 0;
         this.invulnerable = false;
+        this.isKO = false;
 
-        // COMBAT
-        this.combo = 0;
         this.facing = 1;
-
-        // INPUT
         this.controls = controls;
 
-        // PROJECTILES
-        this.projectiles = [];
-
-        // ABILITIES
         this.abilities = [];
 
-        // SPRITES (NEW)
         this.animations = {};
         this.currentAnim = "idle";
 
         if (this.core) this.loadAbilities();
     }
 
-    // ============================================
+    // =========================
     // SPRITE SYSTEM
-    // ============================================
+    // =========================
 
     updateAnimation(state) {
 
-        if (this.currentAnim !== state) {
+        this.currentAnim = state;
 
-            this.currentAnim = state;
-        }
-
-        const anim = this.animations[this.currentAnim];
+        const anim = this.animations[state];
 
         if (anim) anim.update();
     }
 
-    // ============================================
+    // =========================
     // ABILITIES
-    // ============================================
+    // =========================
 
     loadAbilities() {
 
@@ -93,23 +69,13 @@ export class Fighter {
         this.abilities = AbilityRegistry[this.core].map(a => a);
     }
 
-    updateAbilities() {
-
-        for (let a of this.abilities) a.update();
-    }
-
-    useAbility(index, enemy) {
-
-        if (!this.abilities[index]) return false;
-
-        return this.abilities[index].use(this, enemy);
-    }
-
-    // ============================================
-    // MOVEMENT + ANIMATION STATES
-    // ============================================
+    // =========================
+    // MOVEMENT
+    // =========================
 
     move(keys, canvas) {
+
+        if (this.isKO) return;
 
         if (this.hitstun > 0) {
 
@@ -119,13 +85,13 @@ export class Fighter {
 
         if (keys[this.controls.left]) {
 
-            this.x -= this.speed * (this.visual.speedBoost || 1);
+            this.x -= this.speed * this.visual.speedBoost;
             this.facing = -1;
         }
 
         if (keys[this.controls.right]) {
 
-            this.x += this.speed * (this.visual.speedBoost || 1);
+            this.x += this.speed * this.visual.speedBoost;
             this.facing = 1;
         }
 
@@ -135,19 +101,10 @@ export class Fighter {
             this.isGrounded = false;
         }
 
-        // ANIMATION LOGIC
-        if (!this.isGrounded) {
-
-            this.updateAnimation("jump");
-
-        } else if (keys[this.controls.left] || keys[this.controls.right]) {
-
-            this.updateAnimation("run");
-
-        } else {
-
-            this.updateAnimation("idle");
-        }
+        // animation state
+        if (!this.isGrounded) this.updateAnimation("jump");
+        else if (keys[this.controls.left] || keys[this.controls.right]) this.updateAnimation("run");
+        else this.updateAnimation("idle");
 
         this.y += this.velocityY;
         this.velocityY += this.gravity;
@@ -159,60 +116,55 @@ export class Fighter {
             this.isGrounded = true;
         }
 
-        this.regenEnergy();
+        this.energy = Math.min(100, this.energy + 0.25);
     }
 
-    regenEnergy() {
+    // =========================
+    // DAMAGE + KO SYSTEM
+    // =========================
 
-        if (this.energy < this.maxEnergy) {
+    takeHit(damage, knockback) {
 
-            this.energy += 0.25;
-        }
-    }
-
-    // ============================================
-    // DAMAGE SYSTEM
-    // ============================================
-
-    takeHit(damage, knockback, direction) {
-
-        if (this.invulnerable) return;
+        if (this.invulnerable || this.isKO) return;
 
         this.health -= damage;
 
         this.hitstun = 20;
 
-        triggerShake(
-            knockback * (this.visual.shakeIntensity || 0.5)
-        );
+        triggerShake(knockback * this.visual.shakeIntensity);
 
-        spawnParticles(
-            this.x + this.width / 2,
-            this.y + this.height / 2,
-            this.visual.aura,
-            12
-        );
+        spawnParticles(this.x, this.y, this.visual.aura, 10);
+
+        if (this.health <= 0) this.KO();
 
         this.invulnerable = true;
 
-        setTimeout(() => {
-
-            this.invulnerable = false;
-
-        }, 300);
+        setTimeout(() => this.invulnerable = false, 300);
     }
 
-    // ============================================
-    // DRAW (SPRITE RENDERING)
-    // ============================================
+    KO() {
+
+        this.isKO = true;
+        this.hitstun = 999;
+
+        triggerShake(30);
+
+        spawnParticles(this.x, this.y, this.visual.aura, 60);
+
+        this.updateAnimation("ko");
+
+        window.gameTimeScale = 0.25;
+
+        setTimeout(() => window.gameTimeScale = 1, 600);
+    }
+
+    // =========================
+    // DRAW
+    // =========================
 
     draw(ctx) {
 
-        // CORE AURA
-        if (this.core) {
-
-            drawCoreAura(ctx, this);
-        }
+        if (this.core) drawCoreAura(ctx, this);
 
         const anim = this.animations[this.currentAnim];
 
@@ -229,19 +181,12 @@ export class Fighter {
 
         } else {
 
-            ctx.fillStyle = this.color;
-
+            ctx.fillStyle = "white";
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
 
-        // ENERGY BAR
+        // energy bar
         ctx.fillStyle = "cyan";
-
-        ctx.fillRect(
-            this.x,
-            this.y - 10,
-            this.energy,
-            5
-        );
+        ctx.fillRect(this.x, this.y - 10, this.energy, 5);
     }
 }
