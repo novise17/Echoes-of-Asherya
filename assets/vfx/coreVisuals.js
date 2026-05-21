@@ -8,17 +8,15 @@ export const CoreVisuals = {
         aura: "orange",
         glow: true,
         trail: true,
-        shakeIntensity: 0.5,
-        particle: "fire",
-        speedBoost: 1.05
+        shakeIntensity: 0.6,
+        speedBoost: 1.08
     },
 
     ice: {
         aura: "cyan",
         glow: true,
         trail: false,
-        shakeIntensity: 0.2,
-        particle: "ice",
+        shakeIntensity: 0.25,
         speedBoost: 0.95
     },
 
@@ -26,17 +24,15 @@ export const CoreVisuals = {
         aura: "yellow",
         glow: true,
         trail: true,
-        shakeIntensity: 0.3,
-        particle: "electric",
-        speedBoost: 1.2
+        shakeIntensity: 0.35,
+        speedBoost: 1.15
     },
 
     earth: {
         aura: "#8B5A2B",
         glow: false,
         trail: false,
-        shakeIntensity: 0.8,
-        particle: "dust",
+        shakeIntensity: 0.9,
         speedBoost: 0.85
     },
 
@@ -44,8 +40,7 @@ export const CoreVisuals = {
         aura: "purple",
         glow: true,
         trail: true,
-        shakeIntensity: 0.6,
-        particle: "cosmic",
+        shakeIntensity: 0.7,
         speedBoost: 1.1
     },
 
@@ -53,8 +48,7 @@ export const CoreVisuals = {
         aura: "black",
         glow: true,
         trail: true,
-        shakeIntensity: 0.4,
-        particle: "void",
-        speedBoost: 1.15
+        shakeIntensity: 0.5,
+        speedBoost: 1.2
     }
 };
