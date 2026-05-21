@@ -1,195 +1,165 @@
 // ============================================
 // FILE: main.js
+// ECHOES OF ASHERYA - GAME ENTRY POINT
 // ============================================
 
-import { MatchManager } from "./engine/matchManager.js";
 import { CharacterSelect } from "./ui/characterSelect.js";
-import { IntroScreen } from "./ui/introScreen.js";
-import { HUD } from "./ui/hud.js";
+import { Fighter } from "./fighters/Fighter.js";
 
-// fighters
-import { Blaze } from "./fighters/Blaze.js";
-import { Volt } from "./fighters/Volt.js";
-import { Frost } from "./fighters/Frost.js";
-import { Nova } from "./fighters/Nova.js";
-import { Shade } from "./fighters/Shade.js";
-import { Titano } from "./fighters/Titano.js";
-
-import { applyShake } from "./vfx/screenShake.js";
-import { updateParticles } from "./vfx/particleSystem.js";
-
-// ============================================
-// CANVAS
-// ============================================
+// ===============================
+// CANVAS SETUP
+// ===============================
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 1200;
+canvas.width = 1000;
 canvas.height = 600;
 
-// ============================================
-// STATE
-// ============================================
-
-let state = "select";
-
-// ============================================
-// ROSTER
-// ============================================
-
-const roster = [
-    new Blaze(0, { left: "a", right: "d", up: "w" }),
-    new Volt(0, { left: "a", right: "d", up: "w" }),
-    new Frost(0, { left: "a", right: "d", up: "w" }),
-    new Nova(0, { left: "a", right: "d", up: "w" }),
-    new Shade(0, { left: "a", right: "d", up: "w" }),
-    new Titano(0, { left: "a", right: "d", up: "w" })
-];
-
-// ============================================
-// SYSTEMS
-// ============================================
-
-const selectScreen = new CharacterSelect(roster);
-const introScreen = new IntroScreen();
-
-let match;
-let hud;
-
-// ============================================
-// INPUT STATE
-// ============================================
+// ===============================
+// INPUT SYSTEM
+// ===============================
 
 const keys = {};
 
 window.addEventListener("keydown", (e) => {
-
     keys[e.key] = true;
-
-    if (state === "select") {
-
-        selectScreen.handleInput(e.key);
-
-        if (selectScreen.isReady()) {
-
-            const fighters = selectScreen.getFighters();
-
-            match = new MatchManager(
-                fighters.p1,
-                fighters.p2
-            );
-
-            hud = new HUD(match.player1, match.player2, match);
-
-            introScreen.start();
-
-            state = "intro";
-        }
-    }
-
-    // ============================
-    // ABILITY INPUTS
-    // ============================
-
-    if (state === "fight") {
-
-        const p1 = match.player1;
-        const p2 = match.player2;
-
-        // 🧑 PLAYER 1 (Z X C V U)
-        if (e.key === "z") p1.useAbility(0, p2);
-        if (e.key === "x") p1.useAbility(1, p2);
-        if (e.key === "c") p1.useAbility(2, p2);
-        if (e.key === "v") p1.useAbility(3, p2);
-        if (e.key === "u") p1.useAbility(4, p2);
-
-        // 🧑 PLAYER 2 (1 2 3 4 5)
-        if (e.key === "1") p2.useAbility(0, p1);
-        if (e.key === "2") p2.useAbility(1, p1);
-        if (e.key === "3") p2.useAbility(2, p1);
-        if (e.key === "4") p2.useAbility(3, p1);
-        if (e.key === "5") p2.useAbility(4, p1);
-    }
 });
 
 window.addEventListener("keyup", (e) => {
-
     keys[e.key] = false;
 });
 
-// ============================================
-// UPDATE
-// ============================================
+// ===============================
+// GAME STATE
+// ===============================
 
-function update() {
+let gameState = "select"; // select | fight
 
-    if (state === "intro") {
+// ===============================
+// FIGHTERS (WILL BE CREATED)
+// ===============================
 
-        introScreen.update();
+let player1, player2;
 
-        if (introScreen.done) state = "fight";
+// ===============================
+// START FIGHT FUNCTION
+// ===============================
 
-        return;
-    }
+function startFight(p1Data, p2Data) {
 
-    if (state === "fight") {
+    player1 = new Fighter(
+        p1Data.name,
+        150,
+        p1Data.color,
+        { left: "a", right: "d", up: "w" },
+        p1Data.core
+    );
 
-        match.update();
+    player2 = new Fighter(
+        p2Data.name,
+        700,
+        p2Data.color,
+        { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp" },
+        p2Data.core
+    );
 
-        if (!match.roundOver && !match.matchOver) {
-
-            match.player1.move(keys, canvas);
-            match.player2.move(keys, canvas);
-
-            match.player1.updateAbilities();
-            match.player2.updateAbilities();
-        }
-    }
+    gameState = "fight";
 }
 
-// ============================================
-// DRAW FIGHT
-// ============================================
+// ===============================
+// CHARACTER SELECT SCREEN
+// ===============================
 
-function drawFight() {
+const selectScreen = new CharacterSelect(
+    [
+        { name: "Blaze", color: "red", core: "fire" },
+        { name: "Frost", color: "cyan", core: "ice" },
+        { name: "Volt", color: "yellow", core: "lightning" },
+        { name: "Titano", color: "gray", core: "earth" },
+        { name: "Nova", color: "purple", core: "cosmic" },
+        { name: "Shade", color: "black", core: "shadow" }
+    ],
+    startFight
+);
 
-    ctx.save();
+// ===============================
+// DRAW BACKGROUND
+// ===============================
 
-    applyShake(ctx);
+function drawStage() {
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // ground
     ctx.fillStyle = "#222";
-
-    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
-
-    match.player1.draw(ctx);
-    match.player2.draw(ctx);
-
-    match.player1.updateProjectiles(ctx, match.player2);
-    match.player2.updateProjectiles(ctx, match.player1);
-
-    updateParticles(ctx);
-
-    hud.draw(ctx, canvas);
-
-    ctx.restore();
+    ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
 }
 
-// ============================================
-// LOOP
-// ============================================
+// ===============================
+// MAIN GAME LOOP
+// ===============================
 
-function loop() {
+function gameLoop() {
 
-    update();
+    drawStage();
 
-    if (state === "select") selectScreen.draw?.(ctx, canvas);
-    else if (state === "intro") introScreen.draw(ctx);
-    else drawFight();
+    // ===========================
+    // CHARACTER SELECT STATE
+    // ===========================
 
-    requestAnimationFrame(loop);
+    if (gameState === "select") {
+
+        selectScreen.update(keys);
+        selectScreen.draw(ctx, canvas);
+    }
+
+    // ===========================
+    // FIGHT STATE
+    // ===========================
+
+    if (gameState === "fight") {
+
+        // UPDATE
+        player1.move(keys, canvas);
+        player2.move(keys, canvas);
+
+        // DRAW
+        player1.draw(ctx);
+        player2.draw(ctx);
+
+        // UI (basic health display)
+        drawUI();
+    }
+
+    requestAnimationFrame(gameLoop);
 }
 
-loop();
+// ===============================
+// UI
+// ===============================
+
+function drawUI() {
+
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+
+    ctx.fillText(
+        `${player1.name} HP: ${player1.health}`,
+        20,
+        30
+    );
+
+    ctx.fillText(
+        `${player2.name} HP: ${player2.health}`,
+        canvas.width - 200,
+        30
+    );
+}
+
+// ===============================
+// START GAME
+// ===============================
+
+gameLoop();
