@@ -1,20 +1,21 @@
-import { Ability } from "../Ability.js";
+export const plasmaDash = {
 
-export class PlasmaDash extends Ability {
-    constructor() {
-        super({
-            name: "Plasma Dash",
-            cooldown: 800,
-            energyCost: 12
-        });
-    }
+    name: "Plasma Dash",
+
+    energyCost: 10,
+
+    cooldown: 20,
 
     activate(fighter, enemy) {
-        fighter.x += fighter.facing * 80;
-        fighter.isAttacking = true;
 
-        setTimeout(() => {
-            fighter.isAttacking = false;
-        }, 100);
+        fighter.gainHeat(8);
+
+        fighter.x += 120 * fighter.facing;
+
+        enemy.takeHit(
+            fighter.boostDamage(10),
+            10,
+            fighter.facing
+        );
     }
-}
+};
