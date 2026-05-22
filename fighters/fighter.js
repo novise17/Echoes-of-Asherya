@@ -1,9 +1,10 @@
-export class Fighter {
+export class fighter {
   constructor(name, x, color, controls) {
     this.name = name;
     this.x = x;
     this.y = 400;
     this.color = color;
+
     this.controls = controls;
 
     this.width = 60;
@@ -18,10 +19,15 @@ export class Fighter {
     this.grounded = false;
 
     this.facing = 1;
+
+    this.attackCooldown = 0;
   }
 
   update(keys, canvas, enemy) {
-    // MOVE
+    // cooldown tick
+    if (this.attackCooldown > 0) this.attackCooldown--;
+
+    // movement
     if (keys[this.controls.left]) {
       this.x -= this.speed;
       this.facing = -1;
@@ -32,18 +38,18 @@ export class Fighter {
       this.facing = 1;
     }
 
-    // JUMP
+    // jump
     if (keys[this.controls.jump] && this.grounded) {
       this.velocityY = this.jumpPower;
       this.grounded = false;
     }
 
-    // ATTACK
+    // attack
     if (keys[this.controls.attack]) {
       this.attack(enemy);
     }
 
-    // PHYSICS
+    // physics
     this.y += this.velocityY;
     this.velocityY += this.gravity;
 
@@ -53,18 +59,22 @@ export class Fighter {
       this.grounded = true;
     }
 
-    // CLAMP
+    // boundaries
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
   }
 
   attack(enemy) {
+    if (this.attackCooldown > 0) return;
+
     const inRange =
       Math.abs(this.x - enemy.x) < 70 &&
       Math.abs(this.y - enemy.y) < 50;
 
     if (inRange) {
-      enemy.hp -= 5;
+      enemy.hp -= 10;
     }
+
+    this.attackCooldown = 20; // prevents spam
   }
 
   draw(ctx) {
