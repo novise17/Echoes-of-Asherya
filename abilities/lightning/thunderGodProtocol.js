@@ -1,18 +1,25 @@
-import { Ability } from "../Ability.js";
+import { triggerShake } from "../../vfx/screenShake.js";
 
-export class ThunderGodProtocol extends Ability {
-    constructor() {
-        super({ name: "Thunder God Protocol", cooldown: 8000, energyCost: 60 });
-    }
+export const thunderGodProtocol = {
+
+    name: "Thunder God Protocol",
+
+    energyCost: 100,
+
+    cooldown: 30,
 
     activate(fighter, enemy) {
-        enemy.health -= 40;
-        enemy.x += fighter.facing * 120;
 
-        fighter.speed += 3;
+        fighter.gainNode();
 
-        setTimeout(() => {
-            fighter.speed -= 3;
-        }, 3000);
+        triggerShake(30);
+
+        enemy.takeHit(
+            fighter.boostDamage(42),
+            45,
+            fighter.facing
+        );
+
+        fighter.chainLightning(enemy);
     }
-}
+};
