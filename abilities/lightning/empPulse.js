@@ -1,12 +1,21 @@
-import { Ability } from "../Ability.js";
+export const empPulse = {
 
-export class EMPPulse extends Ability {
-    constructor() {
-        super({ name: "EMP Pulse", cooldown: 2000, energyCost: 20 });
-    }
+    name: "EMP Pulse",
+
+    energyCost: 18,
+
+    cooldown: 90,
 
     activate(fighter, enemy) {
-        enemy.energy -= 30;
-        enemy.health -= 5;
+
+        fighter.gainNode();
+
+        enemy.takeHit(
+            fighter.boostDamage(18),
+            16,
+            fighter.facing
+        );
+
+        fighter.chainLightning(enemy);
     }
-}
+};
