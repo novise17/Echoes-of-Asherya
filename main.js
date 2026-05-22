@@ -2,7 +2,7 @@
 // FILE: main.js //
 // ECHOES OF ASHERYA - GAME ENTRY POINT //
 // ============================================ //
-
+console.log("MAIN.JS LOADED");
 console.log("GAME IS RUNNING");
 
 import { CharacterSelect } from "./ui/characterSelect.js";
