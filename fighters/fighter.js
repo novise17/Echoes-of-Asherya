@@ -1,13 +1,12 @@
 // ============================================ //
-// FILE: fighters/fighter.js                   //
-// ECHOES OF ASHERYA - CORE KERNEL V8 CLEAN     //
+// FILE: fighters/Fighter.js
+// ECHOES OF ASHERYA - CORE KERNEL V8 CLEAN
 // ============================================ //
 
 import { triggerShake } from "../vfx/screenShake.js";
 import { spawnParticles } from "../vfx/particleSystem.js";
 import { drawCoreAura } from "../vfx/coreAuras.js";
 import { ComboTracker } from "../engine/comboTracker.js";
-import { keys } from "../input/keyState.js";
 
 export class Fighter {
   constructor(name, x, color, controls) {
@@ -33,11 +32,11 @@ export class Fighter {
     this.maxEnergy = 100;
     this.energy = 100;
 
-    // COMBAT MODIFIERS
+    // COMBAT
     this.damageMultiplier = 1;
     this.defenseMultiplier = 1;
 
-    // STATE LOCK SYSTEM
+    // STATE
     this.actionState = "neutral";
     this.stateTimer = 0;
     this.currentAbilityContext = null;
@@ -50,7 +49,7 @@ export class Fighter {
     // COUNTER SYSTEM
     this.isCounterHitWindow = false;
 
-    // COMBO SYSTEM
+    // COMBO
     this.combo = new ComboTracker();
 
     // INPUT
@@ -61,7 +60,6 @@ export class Fighter {
     this.abilities = { z: null, x: null, c: null, v: null, u: null };
     this.cooldowns = { z: 0, x: 0, c: 0, v: 0, u: 0 };
 
-    // TRANSFORM STATE
     this.state = {
       meter: 0,
       maxMeter: 100,
@@ -71,7 +69,7 @@ export class Fighter {
   }
 
   // =========================
-  // UPDATE LOOP
+  // UPDATE
   // =========================
   update() {
     this.combo.update();
@@ -105,9 +103,11 @@ export class Fighter {
   }
 
   // =========================
-  // MOVEMENT (LOCKED STATES)
+  // MOVE
   // =========================
   move(canvas) {
+    const keys = window.keysRefProxy; // 🔥 SINGLE INPUT SOURCE
+
     if (this.isKO) return;
     if (this.hitstun > 0 || this.blockstun > 0) return;
     if (this.actionState !== "neutral") return;
@@ -138,30 +138,21 @@ export class Fighter {
   }
 
   // =========================
-  // ATTACK
+  // DAMAGE
   // =========================
   dealDamage(target, dmg, knockback, hitstun = 12, blockstun = 6) {
-    if (!target || target.isKO) return null;
-
     let damage = dmg * this.damageMultiplier;
-
     const dir = target.x >= this.x ? 1 : -1;
 
-    return target.takeHit(
-      damage,
-      knockback,
-      dir,
-      hitstun,
-      blockstun,
-      this
-    );
+    return target.takeHit(damage, knockback, dir, hitstun, blockstun, this);
   }
 
   // =========================
-  // INPUT ATTACK STATE
+  // ATTACK
   // =========================
   useAbility(key, enemy) {
     if (this.actionState !== "neutral") return;
+
     const ability = this.abilities[key];
     if (!ability) return;
 
@@ -173,36 +164,38 @@ export class Fighter {
   }
 
   // =========================
-  // DEFENSE + COUNTER HIT
+  // BLOCK CHECK
   // =========================
   checkBlock(enemy) {
-    const away =
-      (enemy.x >= this.x && keys[this.controls.left]) ||
-      (enemy.x < this.x && keys[this.controls.right]);
+    const keys = window.keysRefProxy;
 
-    return this.actionState === "neutral" && away;
+    return (
+      this.actionState === "neutral" &&
+      (
+        (enemy.x >= this.x && keys[this.controls.left]) ||
+        (enemy.x < this.x && keys[this.controls.right])
+      )
+    );
   }
 
+  // =========================
+  // TAKE HIT
+  // =========================
   takeHit(dmg, knockback, dir, hitstun, blockstun, attacker) {
-    if (this.invulnerable) return { success: false };
+    const keys = window.keysRefProxy;
 
     const isBlocking = this.checkBlock(attacker);
 
-    // BLOCK
     if (isBlocking) {
       this.blockstun = blockstun;
       this.x += knockback * 0.3 * dir;
-
       return { success: true, type: "BLOCK" };
     }
 
-    // COUNTER HIT
     let isCounter = this.actionState === "startup";
-
     if (isCounter) dmg *= 1.35;
 
     this.health -= dmg;
-
     this.hitstun = isCounter ? 18 : hitstun;
 
     this.x += knockback * (1 + (1 - this.health / this.maxHealth)) * dir;
