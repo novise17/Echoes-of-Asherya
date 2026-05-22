@@ -1,7 +1,8 @@
 // ============================================ //
-// FILE: main.js //
-// ECHOES OF ASHERYA - GAME ENTRY POINT //
+// FILE: main.js
+// ECHOES OF ASHERYA - GAME ENTRY POINT
 // ============================================ //
+
 console.log("MAIN.JS LOADED");
 console.log("GAME IS RUNNING");
 
@@ -9,7 +10,7 @@ import { CharacterSelect } from "./ui/characterSelect.js";
 import { Fighter } from "./fighters/Fighter.js";
 
 // =============================== //
-// CANVAS SETUP //
+// CANVAS SETUP
 // =============================== //
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -17,9 +18,10 @@ canvas.width = 1000;
 canvas.height = 600;
 
 // =============================== //
-// INPUT SYSTEM //
+// INPUT SYSTEM (SINGLE SOURCE)
 // =============================== //
 const keys = {};
+window.keysRefProxy = keys; // 🔥 GLOBAL INPUT ACCESS FOR FIGHTERS
 
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
@@ -30,40 +32,38 @@ window.addEventListener("keyup", (e) => {
 });
 
 // =============================== //
-// GAME STATE //
+// GAME STATE
 // =============================== //
-let gameState = "select"; // select | fight
+let gameState = "select";
 
 // =============================== //
-// FIGHTERS (WILL BE CREATED) //
+// FIGHTERS
 // =============================== //
 let player1, player2;
 
 // =============================== //
-// START FIGHT FUNCTION //
+// START FIGHT
 // =============================== //
 function startFight(p1Data, p2Data) {
   player1 = new Fighter(
     p1Data.name,
     150,
     p1Data.color,
-    { left: "a", right: "d", up: "w" },
-    p1Data.core
+    { left: "a", right: "d", jump: "w" }
   );
 
   player2 = new Fighter(
     p2Data.name,
     700,
     p2Data.color,
-    { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp" },
-    p2Data.core
+    { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp" }
   );
 
   gameState = "fight";
 }
 
 // =============================== //
-// CHARACTER SELECT SCREEN //
+// CHARACTER SELECT
 // =============================== //
 const selectScreen = new CharacterSelect(
   [
@@ -78,48 +78,39 @@ const selectScreen = new CharacterSelect(
 );
 
 // =============================== //
-// DRAW BACKGROUND //
+// STAGE
 // =============================== //
 function drawStage() {
   ctx.fillStyle = "#111";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // ground
   ctx.fillStyle = "#222";
   ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
 }
 
 // =============================== //
-// MAIN GAME LOOP //
+// MAIN LOOP
 // =============================== //
 function gameLoop() {
   drawStage();
 
-  // =========================== //
-  // CHARACTER SELECT STATE //
-  // =========================== //
   if (gameState === "select") {
     selectScreen.update(keys);
     selectScreen.draw(ctx, canvas);
   }
 
-  // =========================== //
-  // FIGHT STATE //
-  // =========================== //
   if (gameState === "fight") {
     // UPDATE
-    player1.move(keys, canvas);
-    player2.move(keys, canvas);
-    
-    // UPDATE fighters
-    if (player1.update) player1.update();
-    if (player2.update) player2.update();
+    player1.move(canvas);
+    player2.move(canvas);
+
+    player1.update();
+    player2.update();
 
     // DRAW
     player1.draw(ctx);
     player2.draw(ctx);
 
-    // UI (basic health display)
     drawUI();
   }
 
@@ -127,24 +118,17 @@ function gameLoop() {
 }
 
 // =============================== //
-// UI //
+// UI
 // =============================== //
 function drawUI() {
   ctx.fillStyle = "white";
   ctx.font = "16px Arial";
-  ctx.fillText(
-    `${player1.name} HP: ${player1.health}`,
-    20,
-    30
-  );
-  ctx.fillText(
-    `${player2.name} HP: ${player2.health}`,
-    canvas.width - 200,
-    30
-  );
+
+  ctx.fillText(`${player1.name} HP: ${player1.health}`, 20, 30);
+  ctx.fillText(`${player2.name} HP: ${player2.health}`, canvas.width - 200, 30);
 }
 
 // =============================== //
-// START GAME //
+// START
 // =============================== //
 gameLoop();
