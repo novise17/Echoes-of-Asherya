@@ -1,11 +1,22 @@
-import { Ability } from "../Ability.js";
+export const railstep = {
 
-export class Railstep extends Ability {
-    constructor() {
-        super({ name: "Railstep", cooldown: 600, energyCost: 10 });
-    }
+    name: "Railstep",
 
-    activate(fighter) {
-        fighter.x += fighter.facing * 90;
+    energyCost: 10,
+
+    cooldown: 15,
+
+    activate(fighter, enemy) {
+
+        fighter.gainNode();
+
+        // lightning dash
+        fighter.x += 140 * fighter.facing;
+
+        enemy.takeHit(
+            fighter.boostDamage(10),
+            8,
+            fighter.facing
+        );
     }
-}
+};
