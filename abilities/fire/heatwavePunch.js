@@ -1,23 +1,14 @@
-export const heatwavePunch = {
+export class HeatwavePunch {
+  constructor() {
+    this.energyCost = 15;
+    this.cooldown = 15;
 
-    name: "Heatwave Punch",
+    this.startupFrames = 8;
+    this.activeFrames = 3;
+    this.recoveryFrames = 16;
+  }
 
-    energyCost: 15,
-
-    cooldown: 15,
-
-    activate(fighter, enemy) {
-
-        // gain heat
-        fighter.gainHeat(12);
-
-        // boosted damage
-        const damage = fighter.boostDamage(14);
-
-        enemy.takeHit(
-            damage,
-            14,
-            fighter.facing
-        );
-    }
-};
+  activate(caster, enemy) {
+    caster.dealDamage(enemy, 14, 8, 24, 12);
+  }
+}
