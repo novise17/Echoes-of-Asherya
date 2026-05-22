@@ -4,7 +4,7 @@ export const empPulse = {
 
     energyCost: 18,
 
-    cooldown: 90,
+    cooldown: 10,
 
     activate(fighter, enemy) {
 
